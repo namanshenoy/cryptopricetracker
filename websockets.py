@@ -21,7 +21,7 @@ def get_btc_usd():
         pass
 
 
-class CryptoClient(WebSocketBaseClient): 
+class CryptoClient(WebSocketBaseClient):
     def set_info(self, from_crypto, to_crypto):
         self.from_crypto = from_crypto
         self.to_crypto = to_crypto
