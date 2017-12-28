@@ -1,3 +1,4 @@
+""" Sets up websockets for Dashboard """
 # pylint: disable-msg=C0103
 
 import json
@@ -108,6 +109,12 @@ class CryptoClient(WebSocketBaseClient):
 if __name__ == '__main__':
     import time
     import threading
+    import setup_secret
+    import send_sms
+
+    setup_secret.run_settings()
+    sms_client = send_sms.TwilioClient()
+    
     get_btc_usd()
     threading.Timer(10.0, get_btc_usd).start()
 
