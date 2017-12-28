@@ -114,6 +114,8 @@ if __name__ == '__main__':
 
     setup_secret.run_settings()
     sms_client = send_sms.TwilioClient()
+
+    #sms_client.send_sms("This shit worked!")
     
     get_btc_usd()
     threading.Timer(10.0, get_btc_usd).start()
