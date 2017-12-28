@@ -1,3 +1,5 @@
+# pylint: disable-msg=C0103
+
 import json
 from ws4py.client import WebSocketBaseClient
 from ws4py.manager import WebSocketManager
@@ -65,6 +67,45 @@ if __name__ == '__main__':
     import threading
     get_btc_usd()
     threading.Timer(10.0, get_btc_usd).start()
+
+    my_coins = [
+        {
+            "name":"BRD",
+            "conv":"BTC",
+            "quan":51.948,
+            "code":"brdbtc"
+        },
+        {
+            "name":"XVG",
+            "conv":"BTC",
+            "quan":466.794,
+            "code":"xvgbtc"
+        },
+        {
+            "name":"ADA",
+            "conv":"BTC",
+            "quan":50.949,
+            "code":"adabtc"
+        },
+        {
+            "name":"NEO",
+            "conv":"BTC",
+            "quan":0.789865,
+            "code":"neobtc"
+        },
+         {
+            "name":"XRP",
+            "conv":"BTC",
+            "quan":73.926,
+            "code":"xrpbtc"
+        },
+        {
+            "name":"IOTA",
+            "conv":"BTC",
+            "quan":6.993,
+            "code":"iotabtc"
+        }
+    ]
 
     try:
         MANAGER.start()
