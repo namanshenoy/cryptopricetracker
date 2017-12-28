@@ -29,15 +29,17 @@ class SetQueue():
 
     def put(self, item, value):
         self.queue.add(item)
-        self.values[item] = value
+        self.values[item] = value # For actual value in ticker
+        self.values[item+'_prev'] = value # For price difference in ticker
 
-    def get(self):
+    def get(self): # Probably never gonna use this one for a while
         item = self.queue.pop()
-        value = self.values[item]
+        value = self.values[item] 
+        del self.values[item+'prev']
         del self.values[item]
         return item.value
 
-    def _size(self):
+    def _size(self): # Probably never gonna use this one for a while
         return len(self.queue)
 
 coin_queue = SetQueue()
@@ -121,7 +123,7 @@ if __name__ == '__main__':
     #sms_client.send_sms("This shit worked!")
     
     get_btc_usd()
-    threading.Timer(10.0, get_btc_usd).start()
+    threading.Timer(5.0, get_btc_usd).start() # Set update BTC Price thread to run every X seconds
 
     my_coins = setup_secret.PORTFOLIO
 
@@ -161,9 +163,9 @@ if __name__ == '__main__':
                 print("{0} - {1} USD: {2:.2f}\t|\tSingle: {3:.4f}".format(coin.upper()[:-3], "BTC", current_val, coin_queue.values[coin]*BTC_USD))
            
             if total_val > prev_total_val:
-                print (Fore.GREEN + "Total Binance Value : {0:.2f}\t+{1}".format(total_val,total_val-prev_total_val))
+                print (Fore.GREEN + "Total Binance Value : {0:.2f}\t+{1:0.3f}".format(total_val,total_val-prev_total_val))
             elif total_val < prev_total_val:
-                print (Fore.RED + "Total Binance Value : {0:.2f}\t+{1}".format(total_val,prev_total_val-total_val))
+                print (Fore.RED + "Total Binance Value : {0:.2f}\t+{1:0.3f}".format(total_val,prev_total_val-total_val))
             else:
                 print ("Total Binance Value : {0:.2f}".format(total_val))
 
