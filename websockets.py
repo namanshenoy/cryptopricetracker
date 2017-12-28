@@ -111,6 +111,7 @@ if __name__ == '__main__':
     import threading
     import setup_secret
     import send_sms
+    from colorama import Fore, Style
 
     setup_secret.run_settings()
     sms_client = send_sms.TwilioClient()
@@ -123,6 +124,8 @@ if __name__ == '__main__':
     threading.Timer(10.0, get_btc_usd).start()
 
     my_coins = setup_secret.PORTFOLIO
+
+    prev_total_val = 0. #For total price difference calculation
 
 
     try:
@@ -147,18 +150,34 @@ if __name__ == '__main__':
 
             total_val = 0.
             total_btc = 0.
+
             for coin in coin_queue.values:
                 current_val = float(coin_queue.values[coin])* BTC_USD * my_coins[coin]['quan']
+
                 if my_coins[coin]['notify']:
                     total_val+= current_val
                     total_btc+= float(coin_queue.values[coin]) * my_coins[coin]['quan']
+
                 print("{0} - {1} USD: {2:.2f}\t|\tSingle: {3:.4f}".format(coin.upper()[:-3], "BTC", current_val, coin_queue.values[coin]*BTC_USD))
-            print ("Total Binance Value : {0:.2f}".format(total_val))
+           
+            if total_val > prev_total_val:
+                print (Fore.GREEN + "Total Binance Value : {0:.2f}\t+{1}".format(total_val,total_val-prev_total_val))
+            elif total_val < prev_total_val:
+                print (Fore.RED + "Total Binance Value : {0:.2f}\t+{1}".format(total_val,prev_total_val-total_val))
+            else:
+                print ("Total Binance Value : {0:.2f}".format(total_val))
+
+            print(Style.RESET_ALL, end="")
+
+            prev_total_val = total_val
+
             print("Total Value in Bitcoin: {0:.8f}\n(USD/BTC from Coinbase)".format(total_btc))
+
             if ALERT_PRICE is not -1 and total_val >= ALERT_PRICE:
                 sms_client.send_sms("Your portfolio has reached {0}.\nNext text notification set to: {1}".format(ALERT_PRICE, ALERT_UPDATE_VAL+ALERT_PRICE))
                 ALERT_PRICE += ALERT_UPDATE_VAL
-            time.sleep(3)
+
+            time.sleep(1)
 
     except KeyboardInterrupt:
         MANAGER.close_all()
