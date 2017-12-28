@@ -177,9 +177,9 @@ if __name__ == '__main__':
                 current_val = float(coin_queue.values[coin])* BTC_USD * my_coins[coin]['quan']
                 total_val+= current_val
                 total_btc+= float(coin_queue.values[coin]) * my_coins[coin]['quan']
-                print("{0}-{1} USD: {2:.2f}".format(coin.upper(), "BTC", current_val))
+                print("{0} - {1} USD: {2:.2f}\t|\tSingle: {3:.4f}".format(coin.upper()[:-3], "BTC", current_val, coin_queue.values[coin]*BTC_USD))
             print ("Total Binance Value : {0:.2f}".format(total_val))
-            print("Total Value in Bitcoin: {}".format(total_btc))
+            print("Total Value in Bitcoin: {0:.8f}\n(USD/BTC from Coinbase)".format(total_btc))
             time.sleep(3)
 
     except KeyboardInterrupt:
