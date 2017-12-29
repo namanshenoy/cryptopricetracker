@@ -17,6 +17,7 @@ coin_queue = queue.Queue()
 
 #FIXME: Change these global to local variable
 BTC_USD = 0.0
+XRB_BTC = 0.0
 
 class SetQueue():
     """
@@ -48,6 +49,7 @@ def get_btc_usd():
     """
     Updates global BTC-USD conversion variable. Global only for dev purposes
     """
+    #FIXME: Make this non-global
     response = requests.get("https://api.coinbase.com/v2/prices/BTC-USD/sell")
     try:
         global BTC_USD
@@ -57,6 +59,18 @@ def get_btc_usd():
         LOGGER.warning("BTC Value could not updated \n{}".format(str(e)))
         pass
 
+def get_xrb_btc():
+    """
+    Updates global XRB-BTC conversion variable. Global only for dev purposes
+    """
+    #FIXME: Make this Non-Global
+    response = requests.get("https://bitgrail.com/api/v1/BTC-XRB/ticker")
+    try:
+        global XRB_BTC
+        response_json = response.json()
+        XRB_BTC = float(response_json["response"]["last"])
+    except Exception as e:
+        LOGGER.warning("XRB Value could not be updated\n{}".format(str(e)))
 
 class CryptoClient(WebSocketBaseClient):
     """
@@ -122,8 +136,12 @@ if __name__ == '__main__':
 
     #sms_client.send_sms("This shit worked!")
     
+    # Get values for BTC and XRB before pulling in other cryptos
     get_btc_usd()
+    get_xrb_btc()
+
     threading.Timer(5.0, get_btc_usd).start() # Set update BTC Price thread to run every X seconds
+    threading.Timer(5.0, get_xrb_btc).start() # Set update BTC Price thread to run every X seconds
 
     my_coins = setup_secret.PORTFOLIO
 
@@ -197,6 +215,8 @@ if __name__ == '__main__':
 
             prev_total_val = total_val
 
+            print("Total XRB Value in Bitcoin: {0:.8f}".format(XRB_BTC))
+            print("Your XRB Value in USD: {0:.2f}".format(XRB_BTC*14.099*BTC_USD))
             print("Total Value in Bitcoin: {0:.8f}\n(USD/BTC from Coinbase)".format(total_btc))
             print("Coinbase BTC-USD Sell: {0:.2f}".format(BTC_USD))
 
