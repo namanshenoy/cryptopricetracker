@@ -18,6 +18,7 @@ coin_queue = queue.Queue()
 #FIXME: Change these global to local variable
 BTC_USD = 0.0
 XRB_BTC = 0.0
+ETN_USD = 0.0
 
 class SetQueue():
     """
@@ -63,7 +64,7 @@ def get_xrb_btc():
     """
     Updates global XRB-BTC conversion variable. Global only for dev purposes
     """
-    #FIXME: Make this Non-Global
+    #FIXME: Make this non-global
     response = requests.get("https://bitgrail.com/api/v1/BTC-XRB/ticker")
     try:
         global XRB_BTC
@@ -71,6 +72,18 @@ def get_xrb_btc():
         XRB_BTC = float(response_json["response"]["last"])
     except Exception as e:
         LOGGER.warning("XRB Value could not be updated\n{}".format(str(e)))
+
+def get_etn_usd():
+    """
+    Updates global ETN-USD conversion variable. Global only for dev purposes
+    """
+    #FIXME: Make this non-global
+    response = requests.get("https://min-api.cryptocompare.com/data/price?fsym=ETN&tsyms=USD")
+    try:
+        global ETN_USD
+        ETN_USD = float(response.json()["USD"])
+    except Exception as e:
+        LOGGER.warning("ETN Value could not be updated\n{}".format(str(e)))
 
 class CryptoClient(WebSocketBaseClient):
     """
@@ -136,12 +149,14 @@ if __name__ == '__main__':
 
     #sms_client.send_sms("This shit worked!")
     
-    # Get values for BTC and XRB before pulling in other cryptos
+    # Pre-obtain non-binance values
     get_btc_usd()
+    get_xrb_btc()
     get_xrb_btc()
 
     threading.Timer(5.0, get_btc_usd).start() # Set update BTC Price thread to run every X seconds
-    threading.Timer(5.0, get_xrb_btc).start() # Set update BTC Price thread to run every X seconds
+    threading.Timer(5.0, get_xrb_btc).start() # Set update XRB Price thread to run every X seconds
+    threading.Timer(5.0, get_etn_usd).start() # Set update ETN Price thread to run every X seconds
 
     my_coins = setup_secret.PORTFOLIO
 
@@ -175,12 +190,13 @@ if __name__ == '__main__':
 
             total_val = 0.
             total_btc = 0.
-
+            total_portfolio_val = 0.
             for coin in coin_queue.values:
                 try:
                     if '_prev' in coin:
                         continue
                     current_val = float(coin_queue.values[coin])* BTC_USD * my_coins[coin]['quan']
+                    total_portfolio_val += current_val
 
                     if my_coins[coin]['notify']:
                         total_val+= current_val
@@ -204,21 +220,42 @@ if __name__ == '__main__':
                     #print(difference.hex())
                 except KeyError:
                     continue
+
+            print()
+
+            #Binance Display
             if total_val > prev_total_val:
                 print (Fore.GREEN + "Total Binance Value : {0:.2f}\t+{1:0.3f}".format(total_val,total_val-prev_total_val))
             elif total_val < prev_total_val:
                 print (Fore.RED + "Total Binance Value : {0:.2f}\t+{1:0.3f}".format(total_val,prev_total_val-total_val))
             else:
                 print ("Total Binance Value : {0:.2f}".format(total_val))
+            print("Total Value in Bitcoin: {0:.8f}\n(USD/BTC from Coinbase)".format(total_btc))
 
             print(Style.RESET_ALL, end="")
 
             prev_total_val = total_val
 
+            print()
+
+            #XRB DISPLAY
             print("Total XRB Value in Bitcoin: {0:.8f}".format(XRB_BTC))
             print("Your XRB Value in USD: {0:.2f}".format(XRB_BTC*14.099*BTC_USD))
-            print("Total Value in Bitcoin: {0:.8f}\n(USD/BTC from Coinbase)".format(total_btc))
+            total_portfolio_val += XRB_BTC*14.099*BTC_USD
+
+            #ETN DISPLAY
+            print("Total ETN Value in USD: {0:.4f}".format(ETN_USD))
+            print("Your ETN Value in USD: {0:.2f}".format(ETN_USD*349.245))
+            total_portfolio_val += XRB_BTC*14.099*BTC_USD
+
+            print()
+            #BTC DISPLAY
             print("Coinbase BTC-USD Sell: {0:.2f}".format(BTC_USD))
+
+            print()
+
+            #PORTFOLIO DISPLAY
+            print("Total Portfolio in USD : ${0:>.4f}".format(total_portfolio_val))
 
             if ALERT_PRICE is not -1 and total_val >= ALERT_PRICE:
                 sms_client.send_sms("\nYour portfolio has reached {0}.\nNext text notification set to: {1}".format(ALERT_PRICE, ALERT_UPDATE_VAL+ALERT_PRICE))
