@@ -129,7 +129,7 @@ if __name__ == '__main__':
 
     prev_total_val = 0. #For total price difference calculation
 
-
+ 
     try:
         MANAGER.start()
         for coin in my_coins.values():
@@ -140,9 +140,14 @@ if __name__ == '__main__':
             client.connect()
 
         while True:
+            
             for ws in MANAGER.websockets.values():
-                coin, btc_val = ws.get_btc_value()
-                coin_queue.values[coin] = btc_val
+                try:
+                    coin, btc_val = ws.get_btc_value()
+                    coin_queue.values[coin+'_prev'] = coin_queue.values[coin]
+                    coin_queue.values[coin] = btc_val
+                except KeyError:
+                    continue
                 if not ws.terminated:
                     break
                 else:
@@ -154,14 +159,33 @@ if __name__ == '__main__':
             total_btc = 0.
 
             for coin in coin_queue.values:
-                current_val = float(coin_queue.values[coin])* BTC_USD * my_coins[coin]['quan']
+                try:
+                    if '_prev' in coin:
+                        continue
+                    current_val = float(coin_queue.values[coin])* BTC_USD * my_coins[coin]['quan']
 
-                if my_coins[coin]['notify']:
-                    total_val+= current_val
-                    total_btc+= float(coin_queue.values[coin]) * my_coins[coin]['quan']
+                    if my_coins[coin]['notify']:
+                        total_val+= current_val
+                        total_btc+= float(coin_queue.values[coin]) * my_coins[coin]['quan']
+                    try:
+                        difference = (coin_queue.values[coin]*(10**8)*BTC_USD)/(coin_queue.values[coin+'_prev']*(10**6)*BTC_USD)
+                    except ZeroDivisionError:
+                        difference = 100
 
-                print("{0} - {1} USD: {2:.2f}\t|\tSingle: {3:.4f}".format(coin.upper()[:-3], "BTC", current_val, coin_queue.values[coin]*BTC_USD))
-           
+                    print("{0} - {1} USD: {2:4.2f}\t|\tSingle: {3:>4.3f}  |  ".format(coin.upper()[:-3], "BTC", current_val, coin_queue.values[coin]*BTC_USD),end="")
+
+                    if difference > 100:
+                        print(Fore.GREEN+"+")
+                    elif difference < 100:
+                        print(Fore.RED+"-")                    
+                    else:
+                        print()
+                    print(Style.RESET_ALL, end="")
+
+                    #difference = hex(float(coin_queue.values[coin+'_prev']).hex()/float(coin_queue.values[coin]).hex())
+                    #print(difference.hex())
+                except KeyError:
+                    continue
             if total_val > prev_total_val:
                 print (Fore.GREEN + "Total Binance Value : {0:.2f}\t+{1:0.3f}".format(total_val,total_val-prev_total_val))
             elif total_val < prev_total_val:
@@ -174,9 +198,10 @@ if __name__ == '__main__':
             prev_total_val = total_val
 
             print("Total Value in Bitcoin: {0:.8f}\n(USD/BTC from Coinbase)".format(total_btc))
+            print("Coinbase BTC-USD Sell: {0:.2f}".format(BTC_USD))
 
             if ALERT_PRICE is not -1 and total_val >= ALERT_PRICE:
-                sms_client.send_sms("Your portfolio has reached {0}.\nNext text notification set to: {1}".format(ALERT_PRICE, ALERT_UPDATE_VAL+ALERT_PRICE))
+                sms_client.send_sms("\nYour portfolio has reached {0}.\nNext text notification set to: {1}".format(ALERT_PRICE, ALERT_UPDATE_VAL+ALERT_PRICE))
                 ALERT_PRICE += ALERT_UPDATE_VAL
 
             time.sleep(1)
