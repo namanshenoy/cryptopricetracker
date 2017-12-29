@@ -70,6 +70,7 @@ def get_xrb_btc():
         global XRB_BTC
         response_json = response.json()
         XRB_BTC = float(response_json["response"]["last"])
+        print("Updated XRB_BTC")
     except Exception as e:
         LOGGER.warning("XRB Value could not be updated\n{}".format(str(e)))
 
@@ -152,7 +153,7 @@ if __name__ == '__main__':
     # Pre-obtain non-binance values
     get_btc_usd()
     get_xrb_btc()
-    get_xrb_btc()
+    get_etn_usd()
 
     threading.Timer(5.0, get_btc_usd).start() # Set update BTC Price thread to run every X seconds
     threading.Timer(5.0, get_xrb_btc).start() # Set update XRB Price thread to run every X seconds
