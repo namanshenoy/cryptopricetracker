@@ -18,7 +18,7 @@ coin_queue = queue.Queue()
 #FIXME: Change these global to local variable
 BTC_USD = 0.0
 XRB_BTC = 0.0
-ETN_USD = 0.0
+STORM_USD = 0.0
 
 class SetQueue():
     """
@@ -51,11 +51,11 @@ def get_btc_usd():
     Updates global BTC-USD conversion variable. Global only for dev purposes
     """
     #FIXME: Make this non-global
-    response = requests.get("https://api.coinbase.com/v2/prices/BTC-USD/sell")
     try:
+        response = requests.get("https://api.coinbase.com/v2/prices/BTC-USD/sell")
         global BTC_USD
         BTC_USD = float(response.json()['data']['amount'])
-        LOGGER.info("Updated BTC Value: %f" % float(BTC_USD))
+        #LOGGER.info("Updated BTC Value: %f" % float(BTC_USD))
     except Exception as e:
         LOGGER.warning("BTC Value could not updated \n{}".format(str(e)))
         pass
@@ -65,26 +65,26 @@ def get_xrb_btc():
     Updates global XRB-BTC conversion variable. Global only for dev purposes
     """
     #FIXME: Make this non-global
-    response = requests.get("https://bitgrail.com/api/v1/BTC-XRB/ticker")
     try:
+        response = requests.get("https://bitgrail.com/api/v1/BTC-XRB/ticker")
         global XRB_BTC
         response_json = response.json()
         XRB_BTC = float(response_json["response"]["last"])
-        print("Updated XRB_BTC")
+        #print("Updated XRB_BTC")
     except Exception as e:
         LOGGER.warning("XRB Value could not be updated\n{}".format(str(e)))
 
-def get_etn_usd():
+def get_storm_usd():
     """
-    Updates global ETN-USD conversion variable. Global only for dev purposes
+    Updates global STORM-USD conversion variable. Global only for dev purposes
     """
     #FIXME: Make this non-global
-    response = requests.get("https://min-api.cryptocompare.com/data/price?fsym=ETN&tsyms=USD")
     try:
-        global ETN_USD
-        ETN_USD = float(response.json()["USD"])
+        response = requests.get("https://min-api.cryptocompare.com/data/price?fsym=STORM&tsyms=USD")
+        global STORM_USD
+        STORM_USD = float(response.json()["USD"])
     except Exception as e:
-        LOGGER.warning("ETN Value could not be updated\n{}".format(str(e)))
+        LOGGER.warning("STORM Value could not be updated\n{}".format(str(e)))
 
 class CryptoClient(WebSocketBaseClient):
     """
@@ -153,11 +153,14 @@ if __name__ == '__main__':
     # Pre-obtain non-binance values
     get_btc_usd()
     get_xrb_btc()
-    get_etn_usd()
+    get_storm_usd()
 
-    threading.Timer(5.0, get_btc_usd).start() # Set update BTC Price thread to run every X seconds
-    threading.Timer(5.0, get_xrb_btc).start() # Set update XRB Price thread to run every X seconds
-    threading.Timer(5.0, get_etn_usd).start() # Set update ETN Price thread to run every X seconds
+    def Timers():
+        get_btc_usd()
+        get_xrb_btc()
+        get_storm_usd()
+    
+    threading.Timer(1, Timers).start() # Set update  Price thread to run every X seconds
 
     my_coins = setup_secret.PORTFOLIO
 
@@ -174,7 +177,7 @@ if __name__ == '__main__':
             client.connect()
 
         while True:
-            
+            Timers()
             for ws in MANAGER.websockets.values():
                 try:
                     coin, btc_val = ws.get_btc_value()
@@ -240,14 +243,14 @@ if __name__ == '__main__':
             print()
 
             #XRB DISPLAY
-            print("Total XRB Value in Bitcoin: {0:.8f}".format(XRB_BTC))
+            print("Single XRB Value in Bitcoin: {0:.8f}".format(XRB_BTC))
             print("Your XRB Value in USD: {0:.2f}".format(XRB_BTC*14.099*BTC_USD))
             total_portfolio_val += XRB_BTC*14.099*BTC_USD
 
-            #ETN DISPLAY
-            print("Total ETN Value in USD: {0:.4f}".format(ETN_USD))
-            print("Your ETN Value in USD: {0:.2f}".format(ETN_USD*349.245))
-            total_portfolio_val += XRB_BTC*14.099*BTC_USD
+            #STORM DISPLAY
+            print("Single STORM Value in USD: {0:.4f}".format(STORM_USD))
+            print("Your STORM Value in USD: {0:.2f}".format(STORM_USD*400))
+            total_portfolio_val += STORM_USD*400
 
             print()
             #BTC DISPLAY
