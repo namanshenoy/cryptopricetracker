@@ -264,7 +264,6 @@ if __name__ == '__main__':
             if ALERT_PRICE is not -1 and total_val >= ALERT_PRICE:
                 sms_client.send_sms("\nYour portfolio has reached {0}.\nNext text notification set to: {1}".format(ALERT_PRICE, ALERT_UPDATE_VAL+ALERT_PRICE))
                 ALERT_PRICE += ALERT_UPDATE_VAL
-
             time.sleep(1)
 
     except KeyboardInterrupt:
