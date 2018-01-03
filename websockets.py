@@ -145,7 +145,8 @@ if __name__ == '__main__':
 
     setup_secret.run_settings()
     sms_client = send_sms.TwilioClient()
-    ALERT_PRICE = float(os.environ['SET_ALERT'])
+    ALERT_PRICE_LOW = float(os.environ['SET_ALERT_LOW'])
+    ALERT_PRICE_HIGH = float(os.environ['SET_ALERT_HIGH'])
     ALERT_UPDATE_VAL = float(os.environ['NEXT_ALERT'])
 
     #sms_client.send_sms("This shit worked!")
@@ -261,9 +262,19 @@ if __name__ == '__main__':
             #PORTFOLIO DISPLAY
             print("Total Portfolio in USD : ${0:>.4f}".format(total_portfolio_val))
 
-            if ALERT_PRICE is not -1 and total_val >= ALERT_PRICE:
-                sms_client.send_sms("\nYour portfolio has reached {0}.\nNext text notification set to: {1}".format(ALERT_PRICE, ALERT_UPDATE_VAL+ALERT_PRICE))
-                ALERT_PRICE += ALERT_UPDATE_VAL
+            print()
+            print("Next High Alert Text: {}".format(ALERT_PRICE_HIGH))
+            print("Next Low Alert Text: {}".format(ALERT_PRICE_LOW))
+
+
+            if ALERT_PRICE_HIGH is not -1 and total_val >= ALERT_PRICE_HIGH:
+                sms_client.send_sms("\nYour portfolio has reached {0}.\nNext high text notification set to: {1}".format(ALERT_PRICE_HIGH, ALERT_UPDATE_VAL+ALERT_PRICE_HIGH))
+                ALERT_PRICE_HIGH += ALERT_UPDATE_VAL
+                ALERT_PRICE_LOW += ALERT_UPDATE_VAL
+            elif ALERT_PRICE_LOW is not -1 and abs(total_val - ALERT_PRICE_LOW) >= (1.2 * ALERT_UPDATE_VAL) and ALERT_PRICE_LOW >= total_val:
+                sms_client.send_sms("\nYour portfolio has dropped to {0}.\nNext low text notification set to: {1}".format(ALERT_PRICE_LOW, ALERT_PRICE_LOW-ALERT_UPDATE_VAL))
+                ALERT_PRICE_HIGH -= ALERT_UPDATE_VAL
+                ALERT_PRICE_LOW -= ALERT_UPDATE_VAL
             time.sleep(1)
 
     except KeyboardInterrupt:
